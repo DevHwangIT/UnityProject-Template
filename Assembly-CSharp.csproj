@@ -58,7 +58,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\MyLibrary\1.DesignPattern\Command Pattern [Working]\CommandPattern.cs" />
+     <Compile Include="Assets\MyLibrary\1.DesignPattern\Command Pattern\CommandPattern.cs" />
      <Compile Include="Assets\MyLibrary\1.DesignPattern\FSM Pattern\Base.cs" />
      <Compile Include="Assets\MyLibrary\1.DesignPattern\FSM Pattern\BaseState.cs" />
      <Compile Include="Assets\MyLibrary\1.DesignPattern\FSM Pattern\FSM_State.cs" />
@@ -90,10 +90,16 @@
      <Compile Include="Assets\MyLibrary\3.Tools\Debug\Scripts\Logging\DebugSystemADB.cs" />
      <Compile Include="Assets\MyLibrary\3.Tools\Debug\Scripts\Logging\DebugSystemDebug.cs" />
      <Compile Include="Assets\MyLibrary\3.Tools\FindMissingScripts\FindMissingScripts.cs" />
+     <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\FristScenePlayer\FristScenePlayer.cs" />
+     <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\ToolbarCallback.cs" />
+     <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\ToolbarExtender.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\BindingVariable\ObservableValue.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\BindingVariable\Sample\ButtonEvents.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\BindingVariable\Sample\DataCenter.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\BindingVariable\Sample\DrawUI.cs" />
+     <Compile Include="Assets\MyLibrary\4.Utility\ElementNamingAttribute\ElementTitleDrawer.cs" />
+     <Compile Include="Assets\MyLibrary\4.Utility\ElementNamingAttribute\SetElementTitleAttribute.cs" />
+     <Compile Include="Assets\MyLibrary\4.Utility\InputMediator\InputMediator.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\JsonReadWrite [Working]\Attributes.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\JsonReadWrite [Working]\Deserializer.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\JsonReadWrite [Working]\Enums.cs" />
@@ -114,19 +120,20 @@
      <Compile Include="Assets\MyLibrary\5.Mobile\Vibration\Example\VibrationExample.cs" />
      <Compile Include="Assets\MyLibrary\5.Mobile\Vibration\Vibration.cs" />
      <Compile Include="Assets\MyLibrary\6.Network\TCP Socket [Working]\MySocket.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Data\PlayerData.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Data\UserData.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameAnalyticsManager\UnityAnalyticsManager.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameManager\GameManager.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameManager\IGameInterface.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameUIManager\Scripts\Localize\UILocalize.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameUIManager\Scripts\SoundPlay\UISoundPlay.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameUIManager\Scripts\UIWindowManager.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameUIManager\Scripts\Window\UIDragObject.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameUIManager\Scripts\Window\UIWindow.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\GameUIManager\Scripts\Window\UIWindowID.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\InputEventManager\InputEventManager.cs" />
-     <Compile Include="Assets\MyLibrary\7.Template\Manager\SoundManager\SoundManager.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Data\PlayerData.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Data\UserData.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameAnalyticsManager\UnityAnalyticsManager.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameManager\GameManager.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameManager\IGameInterface.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameUIManager\Scripts\Localize\UILocalize.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameUIManager\Scripts\SoundPlay\UISoundPlay.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameUIManager\Scripts\UIWindowManager.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameUIManager\Scripts\Window\UIDragObject.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameUIManager\Scripts\Window\UIWindow.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\GameUIManager\Scripts\Window\UIWindowID.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\InputEventManager\InputEventManager.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\InputEventManager\PlayerInput.cs" />
+     <Compile Include="Assets\MyLibrary\7.Game Template\Manager\SoundManager\SoundManager.cs" />
      <Compile Include="Assets\MyLibrary\999.Etc\WearingMesh.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
      <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
