@@ -106,6 +106,10 @@
      <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\FristScenePlayer\FristScenePlayer.cs" />
      <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\ToolbarCallback.cs" />
      <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\ToolbarExtender.cs" />
+     <Compile Include="Assets\MyLibrary\4.Utility\CameraWork\CameraEffect.cs" />
+     <Compile Include="Assets\MyLibrary\4.Utility\CameraWork\CameraEffect\CameraShake.cs" />
+     <Compile Include="Assets\MyLibrary\4.Utility\CameraWork\CameraEffect\CameraZoomIn.cs" />
+     <Compile Include="Assets\MyLibrary\4.Utility\CameraWork\CameraWorker.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\ElementNamingAttribute\ElementTitleDrawer.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\ElementNamingAttribute\SetElementTitleAttribute.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\InputMediator\InputMediator.cs" />
