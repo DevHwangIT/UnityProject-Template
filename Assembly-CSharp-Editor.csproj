@@ -58,11 +58,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\MyLibrary\1.DesignPattern\ObjectPool Pattern\Sample\Editor\ObjectPoolSampleEditor.cs" />
      <Compile Include="Assets\MyLibrary\3.Tools\Debug\Scripts\Editor\DebugSystemEditor.cs" />
+     <Compile Include="Assets\MyLibrary\3.Tools\FindMissingScripts\Editor\FindMissingScripts.cs" />
+     <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\Editor\ToolbarCallback.cs" />
+     <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\Editor\ToolbarExtender.cs" />
+     <Compile Include="Assets\MyLibrary\3.Tools\UnityToolbarExtender\FristScenePlayer\Editor\FristScenePlayer.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\CameraWork\Editor\CameraWorkerEditor.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\ParticleController\Editor\ParticleControllerEditor.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\SerializableDictionary [Working]\Editor\DebugUtilsEditor.cs" />
      <Compile Include="Assets\MyLibrary\4.Utility\SerializableDictionary [Working]\SerializableDictionary\Editor\SerializableDictionaryPropertyDrawer.cs" />
+     <Compile Include="Assets\MyLibrary\8.Attribute\ReadOnly\Editor\ReadOnlyInEditorAttributeDrawer.cs" />
  <Reference Include="UnityEditor.TestRunner">
  <HintPath>C:/Users/황인태/Documents/GitHub/Project/TemplateProject/Library/ScriptAssemblies/UnityEditor.TestRunner.dll</HintPath>
  </Reference>
