@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 970e9fce2d0514e72be5c38d60868862, type: 3}
+  m_Name: DebugSystemGUIData
+  m_EditorClassIdentifier: Assembly-CSharp::DebugSystemGUIDataScriptable
+  debugSystemGUISkin: {fileID: 11400000, guid: 3d0f205ed42ca4673bb59fac2da9c3b8, type: 2}
+  FontSize: 40
+  imagesResources:
+    clearImage: {fileID: 2800000, guid: cfe37ec0bf0934b7ebb3f275714da334, type: 3}
+    collapseImage: {fileID: 2800000, guid: 6d4b114af8dba452f895a08b0117b855, type: 3}
+    clearOnNewSceneImage: {fileID: 2800000, guid: fc63c4fcab58640028438681c15bbadb,
+      type: 3}
+    showTimeImage: {fileID: 2800000, guid: c5bf3d54af9dc4630809ac8de2770f3d, type: 3}
+    showSceneImage: {fileID: 2800000, guid: c74e00654067741889b75744c6730ded, type: 3}
+    userImage: {fileID: 2800000, guid: a4e197eb411c94d63b792b361ac12cb0, type: 3}
+    showMemoryImage: {fileID: 2800000, guid: 2cf011ceda2734216ba32634ae7ccfe0, type: 3}
+    softwareImage: {fileID: 2800000, guid: 862cceca699ec4a7792bfd3aa72c9bdc, type: 3}
+    dateImage: {fileID: 2800000, guid: a8a9b1dcbdb7446f88dad0184d3c8950, type: 3}
+    showFpsImage: {fileID: 2800000, guid: 88372a2a73c6744b0881a6e3446745b0, type: 3}
+    infoImage: {fileID: 2800000, guid: a2885ecca6e3b46c2bdb06f5591aec94, type: 3}
+    saveLogsImage: {fileID: 2800000, guid: e954c376b318e4be491361956fc4bca0, type: 3}
+    searchImage: {fileID: 2800000, guid: 95603cf5298ff4eaab07a7dcafde9b02, type: 3}
+    copyImage: {fileID: 2800000, guid: e592ac197cba74a4f8f3b1012df07da0, type: 3}
+    closeImage: {fileID: 2800000, guid: 74d3de16880da49c68971a8fa0d6c728, type: 3}
+    buildFromImage: {fileID: 2800000, guid: eb1aabe5d79f54bfbab3756d63724f29, type: 3}
+    systemInfoImage: {fileID: 2800000, guid: 719ff9e6cbd88476a8e879d25a00a47e, type: 3}
+    graphicsInfoImage: {fileID: 2800000, guid: 270f7efdc8c9d45a687f2f945183f4d3, type: 3}
+    backImage: {fileID: 2800000, guid: 0b5434a15cac048628adaec926eec64c, type: 3}
+    logImage: {fileID: 2800000, guid: bc86b0e7dfe6048fc8489f9ef8946fca, type: 3}
+    warningImage: {fileID: 2800000, guid: f7a6677f280ec42b28c08f1d337024ec, type: 3}
+    errorImage: {fileID: 2800000, guid: 763f0e112e7f143898bd8a6cb395d818, type: 3}
+    even_logImage: {fileID: 2800000, guid: 842b035370eaa4440886d2b811d98c81, type: 3}
+    odd_logImage: {fileID: 2800000, guid: c5987dbe290f84f4aa40b4fb9839f061, type: 3}
+    selectedImage: {fileID: 2800000, guid: fcdd40c75c1714d0393530e3fd459e36, type: 3}
+  IconSize: {x: 80, y: 80}

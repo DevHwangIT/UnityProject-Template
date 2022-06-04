@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 88bdb7c1bbc9a7146b16ae98856806b3
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - _bgmClipData: {fileID: 11400000, guid: 2c9440472418c5a40b2672bcf82c050e, type: 2}
+  - _sfxClipData: {fileID: 11400000, guid: 275e3b429efe9f7499a48c362b5f1721, type: 2}
+  - audioMixer: {fileID: 24100000, guid: b21e54a9e52d03f4cb1215c77ae17d50, type: 2}
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 01912fbc19bf7224e8c9b80117fae03e, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
