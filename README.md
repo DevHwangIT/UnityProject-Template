@@ -2,7 +2,8 @@
 
 ---
 <h3>[ 프로젝트 사진 ]</h3>
-<img src="https://github.com/UnityTechnologies/open-project-1/raw/main/Docs/ReadmeImages/ApproachingTheIsland_Header.jpg"/><br><br>
+<img src="https://user-images.githubusercontent.com/62154896/172307956-98de23b3-8df5-4148-9fff-534c36111f4c.PNG"/>[ Image Size : 3000*1500 ]<br><br>
+
 
 <h3>[ 프로젝트 내용 ]</h3>
 해당 게임에 대한 설명 글 작성.
