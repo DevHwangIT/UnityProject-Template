@@ -1,7 +1,7 @@
 <h2>Unity Project : [ 프로젝트 이름 ]</h2>
 
 ---
-<h3>[ 프로젝트 사진 ]</h3>
+<h3>[ 유니티 버전 : 2020.3.27f1 ]</h3>
 <img src="https://user-images.githubusercontent.com/62154896/172307956-98de23b3-8df5-4148-9fff-534c36111f4c.PNG"/>[ Image Size : 3000*1500 ]<br><br>
 
 
