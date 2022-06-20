@@ -52,3 +52,8 @@ public void Print()
 	console.print("Hellow World!!");
 }
 ```
+
+<h4> 참고 자료 </h4>
+
+예제 - 깃허브 링크<br>
+[![Video Label](http://img.youtube.com/vi/uLR1RNqJ1Mw/0.jpg)](https://youtu.be/uLR1RNqJ1Mw?t=0s)
