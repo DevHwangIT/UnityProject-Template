@@ -14,13 +14,13 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
     [InitializeOnLoad]
     public sealed class HierarchyEditor
     {
         internal const int GLOBAL_SPACE_OFFSET_LEFT = 16 * 2;
-
+        internal const string HIERARCHY_PACKAGE_NAME = "Hierarchy 4";
         static HierarchyEditor instance;
 
         public static HierarchyEditor Instance
@@ -34,6 +34,7 @@ namespace Hierarchy2
             private set { instance = value; }
         }
 
+        Dictionary<string, int> sceneObjectCounts = new Dictionary<string, int>();
         Dictionary<int, UnityEngine.Object> selectedComponents = new Dictionary<int, UnityEngine.Object>();
         Dictionary<string, string> dicComponents = new Dictionary<string, string>(StringComparer.Ordinal);
         UnityEngine.Object activeComponent;
@@ -49,9 +50,9 @@ namespace Hierarchy2
         }
 
         int deepestRow = int.MinValue;
-        int previousRowIndex = int.MinValue;
+        int previousRowIdx = int.MinValue;
 
-        int sceneIndex = 0;
+        int sceneIdx = 0;
         Scene currentScene;
         Scene previousScene;
 
@@ -65,8 +66,8 @@ namespace Hierarchy2
 
         Event currentEvent;
 
-        RowItem rowItem = new RowItem();
-        RowItem previousElement = null;
+        HierarchyObject hObject = new HierarchyObject();
+        HierarchyObject previousElement = null;
         WidthUse widthUse = WidthUse.zero;
 
         static HierarchyEditor()
@@ -82,24 +83,24 @@ namespace Hierarchy2
             AssetDatabase.importPackageCompleted += ImportPackageCompleted;
         }
 
-        static List<Type> InternalEditorType = new List<Type>();
-        static Dictionary<string, Type> dicInternalEditorType = new Dictionary<string, Type>();
-        static List<Type> DisplayOnHierarchyScriptType = new List<Type>();
-        static Dictionary<string, Type> dicDisplayOnHierarchyScriptType = new Dictionary<string, Type>();
+        internal static List<Type> InternalEditorType = new List<Type>();
+        internal static Dictionary<string, Type> dicInternalEditorType = new Dictionary<string, Type>();
+        internal static List<Type> DisplayOnHierarchyScriptType = new List<Type>();
+        internal static Dictionary<string, Type> dicDisplayOnHierarchyScriptType = new Dictionary<string, Type>();
 
-        static Type SceneHierarchyWindow;
-        static Type SceneHierarchy;
-        static Type GameObjectTreeViewGUI;
+        internal static Type SceneHierarchyWindow;
+        internal static Type SceneHierarchy;
+        internal static Type GameObjectTreeViewGUI;
 
-        static FieldInfo m_SceneHierarchy;
-        static FieldInfo m_TreeView;
-        static PropertyInfo gui;
-        static FieldInfo k_IconWidth;
+        internal static FieldInfo m_SceneHierarchy;
+        internal static FieldInfo m_TreeView;
+        internal static PropertyInfo gui;
+        internal static FieldInfo k_IconWidth;
 
-        static Func<SearchableEditorWindow> lastInteractedHierarchyWindowDelegate;
-        static Func<IEnumerable> GetAllSceneHierarchyWindowsDelegate;
-        static Func<GameObject, Rect, bool, bool> IconSelectorShowAtPositionDelegate;
-        static Action<Rect, UnityEngine.Object, int> DisplayObjectContextMenuDelegate;
+        internal static Func<SearchableEditorWindow> lastInteractedHierarchyWindowDelegate;
+        internal static Func<IEnumerable> GetAllSceneHierarchyWindowsDelegate;
+        internal static Func<GameObject, Rect, bool, bool> IconSelectorShowAtPositionDelegate;
+        internal static Action<Rect, UnityEngine.Object, int> DisplayObjectContextMenuDelegate;
 
         public static Action OnRepaintHierarchyWindowCallback;
         public static Action OnWindowsReorderedCallback;
@@ -149,12 +150,10 @@ namespace Hierarchy2
             DisplayObjectContextMenuDelegate = Delegate.CreateDelegate(typeof(Action<Rect, UnityEngine.Object, int>), DisplayObjectContextMenu) as Action<Rect, UnityEngine.Object, int>;
 
 
-            Type IconSelector = typeof(EditorWindow).Assembly.GetTypes().Single(type =>
-                type.BaseType == typeof(EditorWindow) && type.Name == nameof(IconSelector)) as Type;
+            Type IconSelector = typeof(EditorWindow).Assembly.GetTypes().Single(type => type.BaseType == typeof(EditorWindow) && type.Name == nameof(IconSelector)) as Type;
             MethodInfo ShowAtPosition = IconSelector.GetMethods(BindingFlags.Static | BindingFlags.NonPublic).Single
             (
-                method => method.Name == nameof(ShowAtPosition) &&
-                          method.GetParameters()[0].ParameterType == typeof(UnityEngine.Object)
+                method => method.Name == nameof(ShowAtPosition) && method.GetParameters()[0].ParameterType == typeof(UnityEngine.Object)
             );
             IconSelectorShowAtPositionDelegate = Delegate.CreateDelegate(typeof(Func<GameObject, Rect, bool, bool>), ShowAtPosition) as Func<GameObject, Rect, bool, bool>;
 
@@ -164,12 +163,6 @@ namespace Hierarchy2
 
             m_Rows = InternalEditorType.Find(type => type.Name == "TreeViewDataSource").GetFields(BindingFlags.NonPublic | BindingFlags.Instance).Single(field => field.Name.Contains(nameof(m_Rows)));
         }
-
-        public static IEnumerable GetAllSceneHierarchyWindows() => GetAllSceneHierarchyWindowsDelegate();
-
-        public static void DisplayObjectContextMenu(Rect rect, UnityEngine.Object unityObject, int value) => DisplayObjectContextMenuDelegate(rect, unityObject, value);
-
-        public static bool IconSelectorShowAtPosition(GameObject gameObject, Rect rect, bool value) => IconSelectorShowAtPositionDelegate(gameObject, rect, value);
 
         private static MethodInfo GetItemAndRowIndexMethod;
         private static PropertyInfo m_TreeView_IData;
@@ -285,6 +278,7 @@ namespace Hierarchy2
 
         void OnEditorUpdate()
         {
+            if (checkingAllHierarchy == false && hierarchyChangedRequireUpdating == false) return;
             if (EditorApplication.timeSinceStartup - lastTimeSinceStartup >= 1)
             {
                 DelayCall();
@@ -310,7 +304,7 @@ namespace Hierarchy2
                     if (!HierarchyWindow.instances.ContainsKey(window.GetInstanceID()))
                     {
                         var hierarchyWindow = new HierarchyWindow(window);
-                        hierarchyWindow.SetWindowTitle("Hierarchy 2");
+                        hierarchyWindow.SetWindowTitle(HIERARCHY_PACKAGE_NAME);
                     }
                 }
 
@@ -427,84 +421,97 @@ namespace Hierarchy2
                 selectionStyleAfterInvoke = true;
             }
 
-            rowItem.Dispose();
-            rowItem.ID = selectionID;
-            rowItem.gameObject = EditorUtility.InstanceIDToObject(rowItem.ID) as GameObject;
-            rowItem.rect = selectionRect;
-            rowItem.rowIndex = GetRowIndex(selectionRect);
-            rowItem.isSelected = InSelection(selectionID);
-            rowItem.isFirstRow = IsFirstRow(selectionRect);
-            rowItem.isFirstElement = IsFirstElement(selectionRect);
+            hObject.Dispose();
+            hObject.ID = selectionID;
+            hObject.gameObject = EditorUtility.InstanceIDToObject(hObject.ID) as GameObject;
+            hObject.rect = selectionRect;
+            hObject.rowIndex = GetRectIndex(hObject.rect);
+            hObject.isSelected = InSelection(selectionID);
+            hObject.isFirstRow = hObject.rowIndex == 0 ? true : false;
+            hObject.isFirstElement = IsFirstElement(hObject.rect);
 
-            rowItem.isNull = rowItem.gameObject == null ? true : false;
+            hObject.isNull = hObject.gameObject == null ? true : false;
 
-            if (!rowItem.isNull)
+            // Caching some data if is a GameObject.
+            if (!hObject.isNull)
             {
-                rowItem.hierarchyFolder = rowItem.gameObject.GetComponent<HierarchyFolder>();
-                if (!(rowItem.isFolder = rowItem.hierarchyFolder))
-                    rowItem.isSeparator = rowItem.name.StartsWith(settings.separatorStartWith);
+                hObject.hierarchyFolder = hObject.gameObject.GetComponent<HierarchyFolder>();
+                if (!(hObject.isFolder = hObject.hierarchyFolder))
+                    hObject.isSeparator = hObject.name.StartsWith(settings.separatorStartWith);
 
-                rowItem.isDirty = EditorUtility.IsDirty(selectionID);
+                hObject.isDirty = EditorUtility.IsDirty(selectionID);
 
-                if (true && !rowItem.isSeparator && rowItem.isDirty)
+                // Need re-write code below.
+                if (true && !hObject.isSeparator && hObject.isDirty)
                 {
-                    rowItem.isPrefab = PrefabUtility.IsPartOfAnyPrefab(rowItem.gameObject);
+                    hObject.isPrefab = PrefabUtility.IsPartOfAnyPrefab(hObject.gameObject);
 
-                    if (rowItem.isPrefab)
-                        rowItem.isPrefabMissing = PrefabUtility.IsPrefabAssetMissing(rowItem.gameObject);
+                    if (hObject.isPrefab)
+                        hObject.isPrefabMissing = PrefabUtility.IsPrefabAssetMissing(hObject.gameObject);
                 }
             }
 
-            rowItem.isRootObject = rowItem.isNull || rowItem.gameObject.transform.parent == null ? true : false;
-            rowItem.isMouseHovering = selectionRect.Contains(currentEvent.mousePosition);
+            hObject.isRootObject = hObject.isNull || hObject.gameObject.transform.parent == null ? true : false;
+            hObject.isMouseHovering = selectionRect.Contains(currentEvent.mousePosition);
 
-            if (rowItem.isFirstRow) //Instance always null
+            if (hObject.isFirstRow)
             {
-                sceneIndex = 0;
+                sceneIdx = 0;
 
-                if (deepestRow > previousRowIndex)
-                    deepestRow = previousRowIndex;
-
-                // if (settings.displayVersion)
-                //     BottomRightArea(selectionRect);
-
-                // Background(selectionRect);
+                if (deepestRow > previousRowIdx)
+                    deepestRow = previousRowIdx;
             }
 
-            if (rowItem.isNull)
+            if (hObject.isNull)
             {
                 if (!IsMultiScene)
                     currentScene = SceneManager.GetActiveScene();
                 else
                 {
-                    if (!rowItem.isFirstRow && sceneIndex < SceneManager.sceneCount - 1)
-                        sceneIndex++;
-                    currentScene = SceneManager.GetSceneAt(sceneIndex);
+                    if (!hObject.isFirstRow && sceneIdx < SceneManager.sceneCount - 1)
+                        sceneIdx++;
+                    currentScene = SceneManager.GetSceneAt(sceneIdx);
                 }
 
                 RenameSceneInHierarchy();
 
+                //Display some info of current scene
+                widthUse = WidthUse.zero;
+
+                //{
+                //    tooltipContent.text = string.Empty;
+                //    tooltipContent.tooltip = "Scene build index";
+                //    tooltipContent.text += "[idx: " + currentScene.buildIndex + "]";
+                //    float width = EditorStyles.centeredGreyMiniLabel.CalcSize(tooltipContent).x;
+                //    width += 2;
+                //    Rect rect = RectFromRight(hObject.rect, width, ref widthUse.right);
+                //    rect.y -= 1;
+                //    GUI.Label(rect, tooltipContent, EditorStyles.centeredGreyMiniLabel);
+                //    tooltipContent.text = string.Empty;
+                //    tooltipContent.tooltip = string.Empty;
+                //}
+
                 if (settings.displayRowBackground)
                 {
-                    if (deepestRow != rowItem.rowIndex)
+                    if (deepestRow != hObject.rowIndex)
                         DisplayRowBackground();
                 }
 
-                previousElement = rowItem;
-                previousRowIndex = rowItem.rowIndex;
+                previousElement = hObject;
+                previousRowIdx = hObject.rowIndex;
                 previousScene = currentScene;
 
-                if (previousRowIndex > deepestRow)
-                    deepestRow = previousRowIndex;
+                if (previousRowIdx > deepestRow)
+                    deepestRow = previousRowIdx;
                 return;
             }
             else
             {
-                if (rowItem.isFirstElement)
+                if (hObject.isFirstElement)
                 {
-                    if (deepestRow > previousRowIndex)
-                        deepestRow = previousRowIndex;
-                    deepestRow -= rowItem.rowIndex;
+                    if (deepestRow > previousRowIdx)
+                        deepestRow = previousRowIdx;
+                    deepestRow -= hObject.rowIndex;
 
                     if (IsMultiScene)
                     {
@@ -512,9 +519,9 @@ namespace Hierarchy2
                         {
                             for (int i = 0; i < SceneManager.sceneCount; ++i)
                             {
-                                if (SceneManager.GetSceneAt(i) == rowItem.gameObject.scene)
+                                if (SceneManager.GetSceneAt(i) == hObject.gameObject.scene)
                                 {
-                                    sceneIndex = i;
+                                    sceneIdx = i;
                                     break;
                                 }
                             }
@@ -526,19 +533,19 @@ namespace Hierarchy2
                 {
                 }
 
-                rowItem.nameRect = rowItem.rect;
+                hObject.nameRect = hObject.rect;
                 GUIStyle nameStyle = TreeStyleFromFont(FontStyle.Normal);
-                rowItem.nameRect.width = nameStyle.CalcSize(new GUIContent(rowItem.gameObject.name)).x;
+                hObject.nameRect.width = nameStyle.CalcSize(new GUIContent(hObject.gameObject.name)).x;
 
-                rowItem.nameRect.x += 16;
+                hObject.nameRect.x += 16;
 
                 var isPrefabMode = PrefabStageUtility.GetCurrentPrefabStage() != null ? true : false;
 
-                if (settings.displayRowBackground && deepestRow != rowItem.rowIndex)
+                if (settings.displayRowBackground && deepestRow != hObject.rowIndex)
                 {
                     if (isPrefabMode)
                     {
-                        if (rowItem.gameObject.transform.parent == null) //Should use row index instead.
+                        if (hObject.gameObject.transform.parent == null) //Should use row index instead.
                         {
                             if (deepestRow != 0)
                                 DisplayRowBackground();
@@ -549,13 +556,13 @@ namespace Hierarchy2
                 }
 
 
-                if (rowItem.isFolder)
+                if (hObject.isFolder)
                 {
-                    var icon = rowItem.childCount > 0 ? Resources.FolderIcon : Resources.EmptyFolderIcon;
+                    var icon = hObject.childCount > 0 ? Resources.FolderIcon : Resources.EmptyFolderIcon;
                     DisplayCustomObjectIcon(icon);
                 }
 
-                if (rowItem.isSeparator && rowItem.isRootObject)
+                if (hObject.isSeparator && hObject.isRootObject)
                 {
                     ElementAsSeparator();
                     goto FINISH;
@@ -564,8 +571,8 @@ namespace Hierarchy2
                 if (settings.useInstantBackground)
                     CustomRowBackground();
 
-                if (settings.displayTreeView && !rowItem.isRootObject)
-                    DisplayTreeView();
+                if (settings.displayTreeView && !hObject.isRootObject)
+                    RenderTreeView();
 
                 if (settings.displayCustomObjectIcon)
                     DisplayCustomObjectIcon(null);
@@ -573,7 +580,7 @@ namespace Hierarchy2
                 widthUse = WidthUse.zero;
                 widthUse.left += GLOBAL_SPACE_OFFSET_LEFT;
                 if (isPrefabMode) widthUse.left -= 2;
-                widthUse.afterName = rowItem.nameRect.x + rowItem.nameRect.width;
+                widthUse.afterName = hObject.nameRect.x + hObject.nameRect.width;
 
                 widthUse.afterName += settings.offSetIconAfterName;
 
@@ -583,25 +590,25 @@ namespace Hierarchy2
 
                 widthUse.afterName += 8;
 
-                if (settings.displayTag && !rowItem.gameObject.CompareTag("Untagged"))
+                if (settings.displayTag && !hObject.gameObject.CompareTag("Untagged"))
                 {
                     if (!settings.onlyDisplayWhileMouseEnter ||
                         (settings.contentDisplay & HierarchySettings.ContentDisplay.Tag) !=
                         HierarchySettings.ContentDisplay.Tag ||
                         ((settings.contentDisplay & HierarchySettings.ContentDisplay.Tag) ==
-                            HierarchySettings.ContentDisplay.Tag && rowItem.isMouseHovering))
+                            HierarchySettings.ContentDisplay.Tag && hObject.isMouseHovering))
                     {
                         DisplayTag();
                     }
                 }
 
-                if (settings.displayLayer && rowItem.gameObject.layer != 0)
+                if (settings.displayLayer && hObject.gameObject.layer != 0)
                 {
                     if (!settings.onlyDisplayWhileMouseEnter ||
                         (settings.contentDisplay & HierarchySettings.ContentDisplay.Layer) !=
                         HierarchySettings.ContentDisplay.Layer ||
                         ((settings.contentDisplay & HierarchySettings.ContentDisplay.Layer) ==
-                            HierarchySettings.ContentDisplay.Layer && rowItem.isMouseHovering))
+                            HierarchySettings.ContentDisplay.Layer && hObject.isMouseHovering))
                     {
                         DisplayLayer();
                     }
@@ -613,25 +620,25 @@ namespace Hierarchy2
                         (settings.contentDisplay & HierarchySettings.ContentDisplay.Component) !=
                         HierarchySettings.ContentDisplay.Component ||
                         ((settings.contentDisplay & HierarchySettings.ContentDisplay.Component) ==
-                            HierarchySettings.ContentDisplay.Component && rowItem.isMouseHovering))
+                            HierarchySettings.ContentDisplay.Component && hObject.isMouseHovering))
                     {
                         DisplayComponents();
                     }
                 }
 
-                ElementEvent(rowItem);
+                ElementEvent(hObject);
 
-                FINISH:
+            FINISH:
                 if (settings.displayGrid)
-                    DisplayGrid();
+                    RenderGrid();
 
-                previousElement = rowItem;
-                previousRowIndex = rowItem.rowIndex;
+                previousElement = hObject;
+                previousRowIdx = hObject.rowIndex;
                 previousScene = currentScene;
 
-                if (previousRowIndex > deepestRow)
+                if (previousRowIdx > deepestRow)
                 {
-                    deepestRow = previousRowIndex;
+                    deepestRow = previousRowIdx;
                 }
             }
         }
@@ -673,9 +680,9 @@ namespace Hierarchy2
                 if (!settings.instantBackgroundColors[i].active) continue;
                 if
                 (
-                    (settings.instantBackgroundColors[i].useTag && !string.IsNullOrEmpty(settings.instantBackgroundColors[i].tag) && rowItem.gameObject.CompareTag(settings.instantBackgroundColors[i].tag)) ||
-                    (settings.instantBackgroundColors[i].useLayer && (1 << rowItem.gameObject.layer & settings.instantBackgroundColors[i].layer) != 0) ||
-                    (settings.instantBackgroundColors[i].useStartWith && !string.IsNullOrEmpty(settings.instantBackgroundColors[i].startWith) && rowItem.name.StartsWith(settings.instantBackgroundColors[i].startWith))
+                    (settings.instantBackgroundColors[i].useTag && !string.IsNullOrEmpty(settings.instantBackgroundColors[i].tag) && hObject.gameObject.CompareTag(settings.instantBackgroundColors[i].tag)) ||
+                    (settings.instantBackgroundColors[i].useLayer && (1 << hObject.gameObject.layer & settings.instantBackgroundColors[i].layer) != 0) ||
+                    (settings.instantBackgroundColors[i].useStartWith && !string.IsNullOrEmpty(settings.instantBackgroundColors[i].startWith) && hObject.name.StartsWith(settings.instantBackgroundColors[i].startWith))
                 )
                 {
                     contain = true;
@@ -688,7 +695,7 @@ namespace Hierarchy2
             GUI.color = instantBackgroundColor.color;
             Rect rect;
             var texture = Resources.PixelWhite;
-            rect = RectFromRight(rowItem.rect, rowItem.rect.width + 16, 0);
+            rect = RectFromRight(hObject.rect, hObject.rect.width + 16, 0);
             rect.x += 16;
             rect.xMin = 32;
 
@@ -701,12 +708,12 @@ namespace Hierarchy2
             if (currentEvent.type != EventType.Repaint)
                 return;
 
-            if (!rowItem.gameObject.CompareTag(settings.separatorDefaultTag))
-                rowItem.gameObject.tag = settings.separatorDefaultTag;
+            if (!hObject.gameObject.CompareTag(settings.separatorDefaultTag))
+                hObject.gameObject.tag = settings.separatorDefaultTag;
 
-            var rect = EditorGUIUtility.PixelsToPoints(RectFromLeft(rowItem.rect, Screen.width, 0));
-            rect.y = rowItem.rect.y;
-            rect.height = rowItem.rect.height;
+            var rect = EditorGUIUtility.PixelsToPoints(RectFromLeft(hObject.rect, Screen.width, 0));
+            rect.y = hObject.rect.y;
+            rect.height = hObject.rect.height;
             rect.x += GLOBAL_SPACE_OFFSET_LEFT;
             rect.width -= GLOBAL_SPACE_OFFSET_LEFT;
 
@@ -714,14 +721,14 @@ namespace Hierarchy2
             GUI.color = ThemeData.colorHeaderBackground;
             GUI.DrawTexture(rect, Resources.PixelWhite, ScaleMode.StretchToFill);
 
-            var content = new GUIContent(rowItem.name.Remove(0, settings.separatorStartWith.Length));
+            var content = new GUIContent(hObject.name.Remove(0, settings.separatorStartWith.Length));
             rect.x += (rect.width - Styles.Header.CalcSize(content).x) / 2;
             GUI.color = ThemeData.colorHeaderTitle;
             GUI.Label(rect, content, Styles.Header);
             GUI.color = guiColor;
         }
 
-        void ElementEvent(RowItem element)
+        void ElementEvent(HierarchyObject element)
         {
             if (currentEvent.type == EventType.KeyDown)
             {
@@ -750,7 +757,7 @@ namespace Hierarchy2
             }
         }
 
-        void StaticIcon(RowItem element)
+        void StaticIcon(HierarchyObject element)
         {
             if (!element.isStatic) return;
 
@@ -786,13 +793,13 @@ namespace Hierarchy2
 
         void DisplayCustomObjectIcon(Texture icon)
         {
-            var rect = RectFromRight(rowItem.nameRect, 16, rowItem.nameRect.width + 1);
+            var rect = RectFromRight(hObject.nameRect, 16, hObject.nameRect.width + 1);
             rect.height = 16;
 
             if (currentEvent.type == EventType.MouseUp && currentEvent.button == 1 &&
                 rect.Contains(currentEvent.mousePosition))
             {
-                IconSelectorShowAtPositionDelegate(rowItem.gameObject, rect, true);
+                IconSelectorShowAtPositionDelegate(hObject.gameObject, rect, true);
                 currentEvent.Use();
             }
 
@@ -804,7 +811,7 @@ namespace Hierarchy2
 
                 if (icon == null)
                 {
-                    icon = AssetPreview.GetMiniThumbnail(rowItem.gameObject);
+                    icon = AssetPreview.GetMiniThumbnail(hObject.gameObject);
                     if (icon.name == "GameObject Icon" || icon.name == "d_GameObject Icon" || icon.name == "Prefab Icon" ||
                         icon.name == "d_Prefab Icon" || icon.name == "PrefabModel Icon" ||
                         icon.name == "d_PrefabModel Icon")
@@ -812,7 +819,7 @@ namespace Hierarchy2
                 }
 
                 Color guiColor = GUI.color;
-                GUI.color = rowItem.rowIndex % 2 != 0 ? ThemeData.colorRowEven : ThemeData.colorRowOdd;
+                GUI.color = hObject.rowIndex % 2 != 0 ? ThemeData.colorRowEven : ThemeData.colorRowOdd;
                 GUI.DrawTexture(rect, Resources.PixelWhite);
                 GUI.color = guiColor;
                 GUI.DrawTexture(rect, icon, ScaleMode.ScaleToFit);
@@ -822,9 +829,9 @@ namespace Hierarchy2
 
         void DisplayEditableIcon()
         {
-            if (rowItem.gameObject.hideFlags == HideFlags.NotEditable)
+            if (hObject.gameObject.hideFlags == HideFlags.NotEditable)
             {
-                Rect lockRect = RectFromLeft(rowItem.nameRect, 12, ref widthUse.afterName);
+                Rect lockRect = RectFromLeft(hObject.nameRect, 12, ref widthUse.afterName);
 
                 if (currentEvent.type == EventType.Repaint)
                 {
@@ -839,7 +846,7 @@ namespace Hierarchy2
                 {
                     GenericMenu lockMenu = new GenericMenu();
 
-                    GameObject gameObject = rowItem.gameObject;
+                    GameObject gameObject = hObject.gameObject;
 
                     lockMenu.AddItem(new GUIContent("Unlock"), false, () =>
                     {
@@ -894,8 +901,8 @@ namespace Hierarchy2
 
         void DisplayComponents()
         {
-            var components = rowItem.gameObject.GetComponents(typeof(Component)).ToList<UnityEngine.Object>();
-            var rendererComponent = rowItem.gameObject.GetComponent<Renderer>();
+            var components = hObject.gameObject.GetComponents(typeof(Component)).ToList<UnityEngine.Object>();
+            var rendererComponent = hObject.gameObject.GetComponent<Renderer>();
             bool hasMaterial = rendererComponent != null && rendererComponent.sharedMaterial != null;
 
             if (hasMaterial)
@@ -924,101 +931,100 @@ namespace Hierarchy2
             for (int i = 0; i < length; ++i)
             {
                 var component = components[i];
+                bool componentNotNull = component != null;
 
-                try
+                Type comType = null;
+                if (componentNotNull) comType = component.GetType();
+
                 {
-                    Type comType = component.GetType();
-
-                    if (comType != null)
+                    bool isMono = false;
+                    if (componentNotNull && comType.BaseType == typeof(MonoBehaviour)) isMono = true;
+                    if (isMono)
                     {
-                        bool isMono = false;
-                        if (comType.BaseType == typeof(MonoBehaviour)) isMono = true;
-                        if (isMono)
-                        {
-                            //TODO: ???
-                            bool shouldIgnoreThisMono = false;
-                            if (shouldIgnoreThisMono) continue;
-                        }
+                        //TODO: ???
+                        bool shouldIgnoreThisMono = false;
+                        if (shouldIgnoreThisMono) continue;
+                    }
 
-                        switch (settings.componentDisplayMode)
-                        {
-                            case HierarchySettings.ComponentDisplayMode.ScriptOnly:
-                                if (!isMono)
-                                    continue;
-                                break;
-
-                            case HierarchySettings.ComponentDisplayMode.Specified:
-                                if (!dicComponents.ContainsKey(comType.Name))
-                                    continue;
-                                break;
-
-                            case HierarchySettings.ComponentDisplayMode.Ignore:
-                                if (dicComponents.ContainsKey(comType.Name))
-                                    continue;
-                                break;
-                        }
-
-                        Rect rect = Rect.zero;
-
-                        if (settings.componentAlignment == HierarchySettings.ElementAlignment.AfterName)
-                            rect = RectFromLeft(rowItem.nameRect, settings.componentSize, ref widthUse.afterName);
-                        else
-                            rect = RectFromRight(rowItem.rect, settings.componentSize, ref widthUse.right);
-
-
-                        if (hasMaterial && i == length - rendererComponent.sharedMaterials.Length &&
-                            settings.componentDisplayMode != HierarchySettings.ComponentDisplayMode.ScriptOnly)
-                        {
-                            for (int m = 0; m < rendererComponent.sharedMaterials.Length; ++m)
-                            {
-                                var sharedMaterial = rendererComponent.sharedMaterials[m];
-
-                                if (sharedMaterial == null) continue;
-                                ComponentIcon(sharedMaterial, comType, rect, true);
-
-                                if (settings.componentAlignment == HierarchySettings.ElementAlignment.AfterName)
-                                    rect = RectFromLeft(rowItem.nameRect, settings.componentSize,
-                                        ref widthUse.afterName);
-                                else
-                                    rect = RectFromRight(rowItem.rect, settings.componentSize, ref widthUse.right);
-                            }
-
-                            separator = true;
+                    switch (settings.componentDisplayMode)
+                    {
+                        case HierarchySettings.ComponentDisplayMode.ScriptOnly:
+                            if (!isMono)
+                                continue;
                             break;
+
+                        case HierarchySettings.ComponentDisplayMode.Specified:
+                            if (componentNotNull && !dicComponents.ContainsKey(comType.Name))
+                                continue;
+                            break;
+
+                        case HierarchySettings.ComponentDisplayMode.Ignore:
+                            if (componentNotNull && dicComponents.ContainsKey(comType.Name))
+                                continue;
+                            break;
+                    }
+
+                    Rect rect = Rect.zero;
+
+                    if (settings.componentAlignment == HierarchySettings.ElementAlignment.AfterName)
+                        rect = RectFromLeft(hObject.nameRect, settings.componentSize, ref widthUse.afterName);
+                    else
+                        rect = RectFromRight(hObject.rect, settings.componentSize, ref widthUse.right);
+
+
+                    if (hasMaterial && i == length - rendererComponent.sharedMaterials.Length &&
+                        settings.componentDisplayMode != HierarchySettings.ComponentDisplayMode.ScriptOnly)
+                    {
+                        for (int m = 0; m < rendererComponent.sharedMaterials.Length; ++m)
+                        {
+                            var sharedMaterial = rendererComponent.sharedMaterials[m];
+
+                            if (sharedMaterial == null) continue;
+                            ComponentIcon(sharedMaterial, comType, rect, true);
+
+                            if (settings.componentAlignment == HierarchySettings.ElementAlignment.AfterName)
+                                rect = RectFromLeft(hObject.nameRect, settings.componentSize,
+                                    ref widthUse.afterName);
+                            else
+                                rect = RectFromRight(hObject.rect, settings.componentSize, ref widthUse.right);
                         }
-
-                        ComponentIcon(component, comType, rect);
-
-                        if (settings.componentAlignment == HierarchySettings.ElementAlignment.AfterName)
-                            widthUse.afterName += settings.componentSpacing;
-                        else
-                            widthUse.right += settings.componentSpacing;
 
                         separator = true;
+                        break;
                     }
-                }
-                catch (System.Exception)
-                {
-                    continue;
+
+                    ComponentIcon(component, comType, rect);
+
+                    if (settings.componentAlignment == HierarchySettings.ElementAlignment.AfterName)
+                        widthUse.afterName += settings.componentSpacing;
+                    else
+                        widthUse.right += settings.componentSpacing;
+
+                    separator = true;
                 }
             }
 
             if (separator && currentEvent.type == EventType.Repaint)
             {
                 if (settings.componentAlignment == HierarchySettings.ElementAlignment.AfterName)
-                    GUISeparator(RectFromLeft(rowItem.nameRect, 2, widthUsedCached), ThemeData.colorGrid);
-                // else
-                //     GUISeparator(RectFromRight(element.rect, 2, widthUsedCached), ThemeData.colorGrid);
+                    GUISeparator(RectFromLeft(hObject.nameRect, 1, widthUsedCached), ThemeData.colorGrid);
+                else
+                    GUISeparator(RectFromRight(hObject.rect, 1, widthUsedCached), ThemeData.colorGrid);
             }
         }
 
         void ComponentIcon(UnityEngine.Object component, Type componentType, Rect rect, bool isMaterial = false)
         {
-            int comHash = component.GetHashCode();
+            bool componentNotNull = component != null;
+            int comHash = componentNotNull ? component.GetHashCode() : -1;
 
             if (currentEvent.type == EventType.Repaint)
             {
-                Texture image = EditorGUIUtility.ObjectContent(component, componentType).image;
+                Texture image = null;
+                if (componentNotNull)
+                    image = EditorGUIUtility.ObjectContent(component, componentType).image;
+                else
+                    image = Resources.MissingScriptIcon;
 
                 if (selectedComponents.ContainsKey(comHash))
                 {
@@ -1028,7 +1034,9 @@ namespace Hierarchy2
                     GUI.color = guiColor;
                 }
 
-                string tooltip = isMaterial ? component.name : componentType.Name;
+                string tooltip = "Missing Script";
+                if (componentNotNull)
+                    tooltip = isMaterial ? component.name : componentType.Name;
                 tooltipContent.tooltip = tooltip;
                 GUI.Box(rect, tooltipContent, GUIStyle.none);
 
@@ -1036,7 +1044,7 @@ namespace Hierarchy2
             }
 
 
-            if (rect.Contains(currentEvent.mousePosition))
+            if (componentNotNull && rect.Contains(currentEvent.mousePosition))
             {
                 if (currentEvent.type == EventType.MouseDown)
                 {
@@ -1133,29 +1141,9 @@ namespace Hierarchy2
             }
         }
 
-        void BottomRightArea(Rect rect)
-        {
-            // var content = new GUIContent(string.Format("{0}", VERSION));
-            // rect = RectFromRight(rect, EditorStyles.miniBoldLabel.CalcSize(content).x, 0);
-            // rect.y += Screen.height - 59;
-            // GUI.color = new Color(.5f, .5f, .5f, .2f);
-            // GUI.Label(rect, content, EditorStyles.miniBoldLabel);
-            // GUI.color = Color.white;
-        }
-
-        void Background(Rect rect)
-        {
-            // rect.y += 16;
-            // rect.xMin = 0;
-            // rect.height = Screen.height;
-            // GUI.color = new Color(.4f, .4f, .4f, 1);
-            // GUI.DrawTexture(rect, Assets.PixelWhite);
-            // GUI.color = Color.white;
-        }
-
         void DisplayTag()
         {
-            GUIContent tagContent = new GUIContent(rowItem.gameObject.tag);
+            GUIContent tagContent = new GUIContent(hObject.gameObject.tag);
 
             var style = Styles.Tag;
             style.normal.textColor = ThemeData.tagColor;
@@ -1163,21 +1151,21 @@ namespace Hierarchy2
 
             if (settings.tagAlignment == HierarchySettings.ElementAlignment.AfterName)
             {
-                rect = RectFromLeft(rowItem.nameRect, style.CalcSize(tagContent).x, ref widthUse.afterName);
+                rect = RectFromLeft(hObject.nameRect, style.CalcSize(tagContent).x, ref widthUse.afterName);
 
                 if (currentEvent.type == EventType.Repaint)
                 {
-                    GUISeparator(RectFromLeft(rowItem.nameRect, 1, widthUse.afterName), ThemeData.colorGrid);
+                    GUISeparator(RectFromLeft(hObject.nameRect, 1, widthUse.afterName), ThemeData.colorGrid);
                     GUI.Label(rect, tagContent, style);
                 }
             }
             else
             {
-                rect = RectFromRight(rowItem.rect, style.CalcSize(tagContent).x, ref widthUse.right);
+                rect = RectFromRight(hObject.rect, style.CalcSize(tagContent).x, ref widthUse.right);
 
                 if (currentEvent.type == EventType.Repaint)
                 {
-                    GUISeparator(RectFromRight(rowItem.rect, 1, widthUse.right), ThemeData.colorGrid);
+                    GUISeparator(RectFromRight(hObject.rect, 1, widthUse.right), ThemeData.colorGrid);
                     GUI.Label(rect, tagContent, style);
                 }
             }
@@ -1186,7 +1174,7 @@ namespace Hierarchy2
                 rect.Contains(currentEvent.mousePosition))
             {
                 GenericMenu menuTags = new GenericMenu();
-                GameObject gameObject = rowItem.gameObject;
+                GameObject gameObject = hObject.gameObject;
 
                 menuTags.AddItem(new GUIContent("Apply All Children"), settings.applyTagTargetAndChild,
                     () => { settings.applyTagTargetAndChild = !settings.applyTagTargetAndChild; });
@@ -1222,28 +1210,28 @@ namespace Hierarchy2
 
         void DisplayLayer()
         {
-            GUIContent layerContent = new GUIContent(LayerMask.LayerToName(rowItem.gameObject.layer));
+            GUIContent layerContent = new GUIContent(LayerMask.LayerToName(hObject.gameObject.layer));
             var style = Styles.Layer;
             style.normal.textColor = ThemeData.layerColor;
             Rect rect;
 
             if (settings.layerAlignment == HierarchySettings.ElementAlignment.AfterName)
             {
-                rect = RectFromLeft(rowItem.nameRect, style.CalcSize(layerContent).x, ref widthUse.afterName);
+                rect = RectFromLeft(hObject.nameRect, style.CalcSize(layerContent).x, ref widthUse.afterName);
 
                 if (currentEvent.type == EventType.Repaint)
                 {
-                    GUISeparator(RectFromLeft(rowItem.nameRect, 1, widthUse.afterName), ThemeData.colorGrid);
+                    GUISeparator(RectFromLeft(hObject.nameRect, 1, widthUse.afterName), ThemeData.colorGrid);
                     GUI.Label(rect, layerContent, style);
                 }
             }
             else
             {
-                rect = RectFromRight(rowItem.rect, style.CalcSize(layerContent).x, ref widthUse.right);
+                rect = RectFromRight(hObject.rect, style.CalcSize(layerContent).x, ref widthUse.right);
 
                 if (currentEvent.type == EventType.Repaint)
                 {
-                    GUISeparator(RectFromRight(rowItem.rect, 1, widthUse.right), ThemeData.colorGrid);
+                    GUISeparator(RectFromRight(hObject.rect, 1, widthUse.right), ThemeData.colorGrid);
                     GUI.Label(rect, layerContent, style);
                 }
             }
@@ -1252,7 +1240,7 @@ namespace Hierarchy2
                 rect.Contains(currentEvent.mousePosition))
             {
                 GenericMenu menuLayers = new GenericMenu();
-                GameObject gameObject = rowItem.gameObject;
+                GameObject gameObject = hObject.gameObject;
 
                 menuLayers.AddItem(new GUIContent("Apply All Children"), settings.applyLayerTargetAndChild,
                     () => { settings.applyLayerTargetAndChild = !settings.applyLayerTargetAndChild; });
@@ -1292,7 +1280,7 @@ namespace Hierarchy2
             if (currentEvent.type != EventType.Repaint)
                 return;
 
-            Rect rect = rowItem.rect;
+            Rect rect = hObject.rect;
             rect.xMin = -1;
             rect.width += 16;
 
@@ -1307,12 +1295,12 @@ namespace Hierarchy2
             GUI.color = guiColor;
         }
 
-        void DisplayGrid()
+        void RenderGrid()
         {
             if (currentEvent.type != EventType.Repaint)
                 return;
 
-            var rect = rowItem.rect;
+            var rect = hObject.rect;
 
             rect.xMin = GLOBAL_SPACE_OFFSET_LEFT;
             rect.y += 15;
@@ -1325,21 +1313,21 @@ namespace Hierarchy2
             GUI.color = guiColor;
         }
 
-        void DisplayTreeView()
+        void RenderTreeView()
         {
             if (currentEvent.type != EventType.Repaint)
                 return;
 
-            Rect rect = rowItem.rect;
+            Rect rect = hObject.rect;
 
             rect.width = 40;
             rect.x -= 34;
-            var t = rowItem.gameObject.transform.parent;
+            var t = hObject.gameObject.transform.parent;
 
             Color guiColor = GUI.color;
             GUI.color = ThemeData.colorTreeView;
 
-            if (t.childCount == 1 || t.GetChild(t.childCount - 1) == rowItem.gameObject.transform)
+            if (t.childCount == 1 || t.GetChild(t.childCount - 1) == hObject.gameObject.transform)
             {
                 GUI.DrawTexture(rect, resources.GetIcon("icon_branch_L"), ScaleMode.ScaleToFit);
             }
@@ -1382,16 +1370,15 @@ namespace Hierarchy2
 #endif
 
             if (!currentScene.isLoaded)
-                name = string.Format("{0} (not loaded", name);
+                name = string.Format("{0} (not loaded)", name);
 
             tmpSceneContent.text = name == "" ? "Untitled" : name;
             Vector2 size = Styles.TreeBoldLabel.CalcSize(tmpSceneContent);
             leftTitleWidthUsed += size.x;
 
-
             if (currentEvent.type == EventType.KeyDown &&
                 currentEvent.keyCode == KeyCode.F2 &&
-                rowItem.rect.Contains(currentEvent.mousePosition))
+                hObject.rect.Contains(currentEvent.mousePosition))
             {
                 SceneRenamePopup.ShowPopup(currentScene);
             }
@@ -1409,11 +1396,9 @@ namespace Hierarchy2
             EditorSceneManager.MarkSceneDirty(scene);
         }
 
-        bool IsFirstElement(Rect rect) => previousRowIndex > rect.y / rect.height;
+        bool IsFirstElement(Rect rect) => previousRowIdx > rect.y / rect.height;
 
-        bool IsFirstRow(Rect rect) => rect.y / rect.height == 0;
-
-        int GetRowIndex(Rect rect) => (int) (rect.y / rect.height);
+        int GetRectIndex(Rect rect) => (int)(rect.y / rect.height);
 
         bool InSelection(int ID) => Selection.Contains(ID) ? true : false;
 
@@ -1558,7 +1543,7 @@ namespace Hierarchy2
             }
         }
 
-        sealed class RowItem
+        sealed class HierarchyObject
         {
             public int ID = int.MinValue;
             public Rect rect;
@@ -1598,7 +1583,7 @@ namespace Hierarchy2
                 get { return isNull ? false : gameObject.isStatic; }
             }
 
-            public RowItem()
+            public HierarchyObject()
             {
             }
 
@@ -1650,35 +1635,12 @@ namespace Hierarchy2
                     {
                         alphaTexture = new Texture2D(16, 16, TextureFormat.RGBA32, false);
                         for (int x = 0; x < 16; ++x)
-                        for (int y = 0; y < 16; ++y)
-                            alphaTexture.SetPixel(x, y, Color.clear);
+                            for (int y = 0; y < 16; ++y)
+                                alphaTexture.SetPixel(x, y, Color.clear);
                         alphaTexture.Apply();
                     }
 
                     return alphaTexture;
-                }
-            }
-
-            private static Texture2D ramp8x8White;
-
-            public static Texture2D Ramp8x8White
-            {
-                get
-                {
-                    if (ramp8x8White == null)
-                    {
-                        ramp8x8White = new byte[]
-                        {
-                            137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 16,
-                            0, 0, 0, 16, 8, 6, 0, 0, 0, 31, 243, 255, 97, 0, 0, 0, 40, 73, 68, 65, 84, 56, 17, 99, 252,
-                            15, 4, 12, 12,
-                            12, 31, 8, 224, 143, 184, 228, 153, 128, 18, 20, 129, 81, 3, 24, 24, 70, 195, 96, 52, 12,
-                            64, 153, 104, 224,
-                            211, 1, 0, 153, 171, 18, 45, 165, 62, 165, 211, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
-                        }.PNGImageDecode();
-                    }
-
-                    return ramp8x8White;
                 }
             }
 
@@ -1705,6 +1667,16 @@ namespace Hierarchy2
                     if (emptyFolderIcon == null)
                         emptyFolderIcon = EditorGUIUtility.IconContent("FolderEmpty Icon").image;
                     return emptyFolderIcon;
+                }
+            }
+            private static Texture missingScriptIcon;
+            public static Texture MissingScriptIcon
+            {
+                get
+                {
+                    if (missingScriptIcon == null)
+                        missingScriptIcon = EditorGUIUtility.IconContent("Warning").image;
+                    return missingScriptIcon;
                 }
             }
         }
@@ -1743,7 +1715,8 @@ namespace Hierarchy2
                 border = new RectOffset(12, 12, 8, 8),
             };
 
-            [System.Obsolete] internal static GUIStyle DirtyLabel = new GUIStyle(EditorStyles.label)
+            [System.Obsolete]
+            internal static GUIStyle DirtyLabel = new GUIStyle(EditorStyles.label)
             {
                 padding = new RectOffset(-1, 0, 0, 0),
                 margin = new RectOffset(0, 0, 0, 0),
@@ -1754,18 +1727,18 @@ namespace Hierarchy2
             internal static GUIStyle Header = new GUIStyle(TreeBoldLabel)
             {
                 richText = true,
-                normal = new GUIStyleState() {textColor = Color.white}
+                normal = new GUIStyleState() { textColor = Color.white }
             };
 
             internal static GUIStyle TreeBoldLabel
             {
-                get { return TreeView.DefaultStyles.boldLabel; }
+                get { return UnityEditor.IMGUI.Controls.TreeView.DefaultStyles.boldLabel; }
             }
 
-            internal static GUIStyle TreeLabel = new GUIStyle(TreeView.DefaultStyles.label)
+            internal static GUIStyle TreeLabel = new GUIStyle(UnityEditor.IMGUI.Controls.TreeView.DefaultStyles.label)
             {
                 richText = true,
-                normal = new GUIStyleState() {textColor = Color.white}
+                normal = new GUIStyleState() { textColor = Color.white }
             };
         }
 
@@ -1773,7 +1746,7 @@ namespace Hierarchy2
         {
             const int priority = 200;
 
-            [MenuItem("Tools/Hierarchy 2/Lock Selection %l", false, priority)]
+            [MenuItem("Tools/Hierarchy 4/Lock Selection %l", false, priority)]
             static void SetNotEditableObject()
             {
                 Undo.RegisterCompleteObjectUndo(Selection.gameObjects, "Set Selections Flag NotEditable");
@@ -1795,10 +1768,10 @@ namespace Hierarchy2
                 InternalEditorUtility.RepaintAllViews();
             }
 
-            [MenuItem("Tools/Hierarchy 2/Lock Selection %l", true, priority)]
+            [MenuItem("Tools/Hierarchy 4/Lock Selection %l", true, priority)]
             static bool ValidateSetNotEditableObject() => Selection.gameObjects.Length > 0;
 
-            [MenuItem("Tools/Hierarchy 2/Unlock Selection %&l", false, priority)]
+            [MenuItem("Tools/Hierarchy 4/Unlock Selection %&l", false, priority)]
             static void SetEditableObject()
             {
                 Undo.RegisterCompleteObjectUndo(Selection.gameObjects, "Set Selections Flag Editable");
@@ -1820,11 +1793,11 @@ namespace Hierarchy2
                 InternalEditorUtility.RepaintAllViews();
             }
 
-            [MenuItem("Tools/Hierarchy 2/Unlock Selection %&l", true, priority)]
+            [MenuItem("Tools/Hierarchy 4/Unlock Selection %&l", true, priority)]
             static bool ValidateSetEditableObject() => Selection.gameObjects.Length > 0;
 
 
-            [MenuItem("Tools/Hierarchy 2/Move Selection Up #w", false, priority)]
+            [MenuItem("Tools/Hierarchy 4/Move Selection Up #w", false, priority)]
             static void QuickSiblingUp()
             {
                 var gameObject = Selection.activeGameObject;
@@ -1840,10 +1813,10 @@ namespace Hierarchy2
                 }
             }
 
-            [MenuItem("Tools/Hierarchy 2/Move Selection Up #w", true)]
+            [MenuItem("Tools/Hierarchy 4/Move Selection Up #w", true)]
             static bool ValidateQuickSiblingUp() => Selection.activeTransform != null;
 
-            [MenuItem("Tools/Hierarchy 2/Move Selection Down #s", false, priority)]
+            [MenuItem("Tools/Hierarchy 4/Move Selection Down #s", false, priority)]
             static void QuickSiblingDown()
             {
                 var gameObject = Selection.activeGameObject;
@@ -1856,10 +1829,10 @@ namespace Hierarchy2
                 gameObject.transform.SetSiblingIndex(++index);
             }
 
-            [MenuItem("Tools/Hierarchy 2/Move Selection Down #s", true, priority)]
+            [MenuItem("Tools/Hierarchy 4/Move Selection Down #s", true, priority)]
             static bool ValidateQuickSiblingDown() => Selection.activeTransform != null;
 
-            [MenuItem("Tools/Hierarchy 2/Separator", priority = 0)]
+            [MenuItem("Tools/Hierarchy 4/Separator", priority = 0)]
             static void CreateHeaderInstance(UnityEditor.MenuCommand command)
             {
                 GameObject gameObject = new GameObject(string.Format("{0}Separator", HierarchyEditor.instance.settings.separatorStartWith));
@@ -1870,6 +1843,31 @@ namespace Hierarchy2
                 //    Undo.SetTransformParent(gameObject.transform, ( (GameObject) command.context ).transform, "Create Header");
 
                 Selection.activeTransform = gameObject.transform;
+            }
+
+            private static int hiddenObjectCount = 0;
+            [MenuItem("Tools/Hierarchy 4/Count Hidden Object", false)]
+            static void HiddenObjectCount()
+            {
+                hiddenObjectCount = 0;
+                Scene scene = SceneManager.GetActiveScene();
+                Debug.Log(scene.name);
+                GameObject[] rootGameObjects = scene.GetRootGameObjects();
+                for (int i = 0; i < rootGameObjects.Length; ++i)
+                    RecursiveHiddenCheck(rootGameObjects[i]);
+                Debug.Log("Total found: " + hiddenObjectCount);
+            }
+
+            static void RecursiveHiddenCheck(GameObject gameObject)
+            {
+                if (gameObject.hideFlags != HideFlags.None)
+                {
+                    Debug.Log("Found: " + gameObject.name + " " + gameObject.hideFlags.ToString());
+                    ++hiddenObjectCount;
+                }
+
+                for (int i = 0; i < gameObject.transform.childCount; ++i)
+                    RecursiveHiddenCheck(gameObject.transform.GetChild(i).gameObject);
             }
         }
     }

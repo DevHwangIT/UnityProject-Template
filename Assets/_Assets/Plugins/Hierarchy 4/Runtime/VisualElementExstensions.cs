@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
     public static class UIElementsExstensions
     {

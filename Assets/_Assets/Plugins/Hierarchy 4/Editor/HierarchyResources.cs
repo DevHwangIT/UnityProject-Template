@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
     internal class HierarchyResources : ScriptableObject
     {

@@ -8,7 +8,7 @@ using UnityEditor.UIElements;
 using UnityEngine.Serialization;
 using System.IO;
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
     [Serializable]
     internal class HierarchySettings : ScriptableObject
@@ -141,7 +141,7 @@ namespace Hierarchy2
         }
 
         public ComponentDisplayMode componentDisplayMode = ComponentDisplayMode.Ignore;
-        public string[] components = new string[] {"Transform", "RectTransform"};
+        public string[] components = new string[] { "Transform", "RectTransform" };
         [HideInInspector] public int componentLimited = 0;
         [Range(12, 16)] public int componentSize = 16;
         public int componentSpacing = 0;
@@ -201,7 +201,7 @@ namespace Hierarchy2
                     HorizontalLayout horizontalLayout = new HorizontalLayout();
                     horizontalLayout.style.backgroundColor = new Color(0, 0, 0, 0.2f);
                     horizontalLayout.style.paddingTop = 4;
-                    horizontalLayout.style.paddingBottom = 10;
+                    horizontalLayout.style.paddingBottom = 27;
                     rootElement.Add(horizontalLayout);
 
                     Label hierarchyTitle = new Label("Hierarchy");
@@ -295,7 +295,7 @@ namespace Hierarchy2
                     Components.StyleMargin(0, 0, TITLE_MARGIN_TOP, TITLE_MARGIN_BOTTOM);
                     verticalLayout.Add(Components);
 
-                    var displayComponents = new Toggle("Display Components Icon");
+                    var displayComponents = new Toggle("Display Icon");
                     displayComponents.value = settings.displayComponents;
                     displayComponents.RegisterValueChangedCallback((evt) =>
                     {
@@ -308,23 +308,23 @@ namespace Hierarchy2
                     verticalLayout.Add(displayComponents);
 
                     var componentAlignment = new EnumField(settings.componentAlignment);
-                    componentAlignment.label = "Component Alignment";
+                    componentAlignment.label = "Alignment";
                     componentAlignment.RegisterValueChangedCallback((evt) =>
                     {
                         Undo.RecordObject(settings, "Change Settings");
 
-                        settings.componentAlignment = (ElementAlignment) evt.newValue;
+                        settings.componentAlignment = (ElementAlignment)evt.newValue;
                         settings.OnSettingsChanged(nameof(settings.componentAlignment));
                     });
                     componentAlignment.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     verticalLayout.Add(componentAlignment);
 
                     var componentDisplayMode = new EnumField(settings.componentDisplayMode);
-                    componentDisplayMode.label = "Component Display Mode";
+                    componentDisplayMode.label = "Display Mode";
                     componentDisplayMode.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     verticalLayout.Add(componentDisplayMode);
 
-                    var componentListInput = new TextField("Components");
+                    var componentListInput = new TextField("Types");
                     componentListInput.value = string.Join(" ", settings.components);
                     componentListInput.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     verticalLayout.Add(componentListInput);
@@ -339,7 +339,7 @@ namespace Hierarchy2
                     {
                         Undo.RecordObject(settings, "Change Settings");
 
-                        settings.componentDisplayMode = (ComponentDisplayMode) evt.newValue;
+                        settings.componentDisplayMode = (ComponentDisplayMode)evt.newValue;
                         switch (settings.componentDisplayMode)
                         {
                             case ComponentDisplayMode.Specified:
@@ -379,7 +379,7 @@ namespace Hierarchy2
                     }
 
                     var componentSize = new EnumField(componentSizeEnum);
-                    componentSize.label = "Component Size";
+                    componentSize.label = "Size";
                     componentSize.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     componentSize.RegisterValueChangedCallback((evt) =>
                     {
@@ -405,7 +405,7 @@ namespace Hierarchy2
                     verticalLayout.Add(componentSize);
 
                     var componentSpacing = new IntegerField();
-                    componentSpacing.label = "Component Spacing";
+                    componentSpacing.label = "Spacing";
                     componentSpacing.value = settings.componentSpacing;
                     componentSpacing.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     componentSpacing.RegisterValueChangedCallback((evt) =>
@@ -417,12 +417,12 @@ namespace Hierarchy2
                     });
                     verticalLayout.Add(componentSpacing);
 
-                    var TagAndLayer = new Label("Tag And Layer");
-                    TagAndLayer.StyleFont(FontStyle.Bold);
-                    TagAndLayer.StyleMargin(0, 0, TITLE_MARGIN_TOP, TITLE_MARGIN_BOTTOM);
-                    verticalLayout.Add(TagAndLayer);
+                    var tagLabel = new Label("Tag");
+                    tagLabel.StyleFont(FontStyle.Bold);
+                    tagLabel.StyleMargin(0, 0, TITLE_MARGIN_TOP, TITLE_MARGIN_BOTTOM);
+                    verticalLayout.Add(tagLabel);
 
-                    var displayTag = new Toggle("Display Tag");
+                    var displayTag = new Toggle("Display");
                     displayTag.value = settings.displayTag;
                     displayTag.RegisterValueChangedCallback((evt) =>
                     {
@@ -434,7 +434,7 @@ namespace Hierarchy2
                     displayTag.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     verticalLayout.Add(displayTag);
 
-                    var applyTagTargetAndChild = new Toggle("Tag Recursive Change");
+                    var applyTagTargetAndChild = new Toggle("Recursive Change");
                     applyTagTargetAndChild.value = settings.applyTagTargetAndChild;
                     applyTagTargetAndChild.RegisterValueChangedCallback((evt) =>
                     {
@@ -447,18 +447,23 @@ namespace Hierarchy2
                     verticalLayout.Add(applyTagTargetAndChild);
 
                     var tagAlignment = new EnumField(settings.tagAlignment);
-                    tagAlignment.label = "Tag Alignment";
+                    tagAlignment.label = "Alignment";
                     tagAlignment.RegisterValueChangedCallback((evt) =>
                     {
                         Undo.RecordObject(settings, "Change Settings");
 
-                        settings.tagAlignment = (ElementAlignment) evt.newValue;
+                        settings.tagAlignment = (ElementAlignment)evt.newValue;
                         settings.OnSettingsChanged(nameof(settings.tagAlignment));
                     });
                     tagAlignment.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     verticalLayout.Add(tagAlignment);
 
-                    var displayLayer = new Toggle("Display Layer");
+                    var layerLabel = new Label("Layer");
+                    layerLabel.StyleFont(FontStyle.Bold);
+                    layerLabel.StyleMargin(0, 0, TITLE_MARGIN_TOP, TITLE_MARGIN_BOTTOM);
+                    verticalLayout.Add(layerLabel);
+
+                    var displayLayer = new Toggle("Display");
                     displayLayer.value = settings.displayLayer;
                     displayLayer.RegisterValueChangedCallback((evt) =>
                     {
@@ -471,7 +476,7 @@ namespace Hierarchy2
                     displayLayer.StyleMarginLeft(CONTENT_MARGIN_LEFT);
                     verticalLayout.Add(displayLayer);
 
-                    var applyLayerTargetAndChild = new Toggle("Layer Recursive Change");
+                    var applyLayerTargetAndChild = new Toggle("Recursive Change");
                     applyLayerTargetAndChild.value = settings.applyLayerTargetAndChild;
                     applyLayerTargetAndChild.RegisterValueChangedCallback((evt) =>
                     {
@@ -484,12 +489,12 @@ namespace Hierarchy2
                     verticalLayout.Add(applyLayerTargetAndChild);
 
                     var layerAlignment = new EnumField(settings.layerAlignment);
-                    layerAlignment.label = "Layer Alignment";
+                    layerAlignment.label = "Alignment";
                     layerAlignment.RegisterValueChangedCallback((evt) =>
                     {
                         Undo.RecordObject(settings, "Change Settings");
 
-                        settings.layerAlignment = (ElementAlignment) evt.newValue;
+                        settings.layerAlignment = (ElementAlignment)evt.newValue;
                         settings.OnSettingsChanged(nameof(settings.layerAlignment));
                     });
                     layerAlignment.StyleMarginLeft(CONTENT_MARGIN_LEFT);
@@ -564,7 +569,7 @@ namespace Hierarchy2
                     {
                         Undo.RecordObject(settings, "Change Settings");
 
-                        settings.contentDisplay = (ContentDisplay) evt.newValue;
+                        settings.contentDisplay = (ContentDisplay)evt.newValue;
                         settings.OnSettingsChanged(nameof(settings.contentDisplay));
                     });
                     contentMaskEnumFlags.style.marginLeft = CONTENT_MARGIN_LEFT;
@@ -752,11 +757,15 @@ namespace Hierarchy2
 
                     Undo.undoRedoPerformed -= OnUndoRedoPerformed;
                     Undo.undoRedoPerformed += OnUndoRedoPerformed;
+                    EditorUtility.SetDirty(settings);
                 },
 
-                deactivateHandler = () => Undo.undoRedoPerformed -= OnUndoRedoPerformed,
+                deactivateHandler = () =>
+                {
+                    Undo.undoRedoPerformed -= OnUndoRedoPerformed;
+                },
 
-                keywords = new HashSet<string>(new[] {"Hierarchy"})
+                keywords = new HashSet<string>(new[] { "Hierarchy" })
             };
 
             return provider;

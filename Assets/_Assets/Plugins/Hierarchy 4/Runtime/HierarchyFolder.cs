@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
-    [AddComponentMenu("Hierarchy 2/Hierarchy Folder", 0)]
+    [AddComponentMenu("Hierarchy 4/Hierarchy Folder", 0)]
     public class HierarchyFolder : MonoBehaviour
     {
         public enum FlattenMode

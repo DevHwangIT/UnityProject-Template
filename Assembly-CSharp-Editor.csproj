@@ -858,13 +858,13 @@
       <Project>{41703be6-a8a9-1c12-77b2-70f9b678c45e}</Project>
       <Name>Assembly-CSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="Hierarchy2.Editor.csproj">
-      <Project>{a2d994d4-c6ef-638b-6b13-bfdbd5d41d89}</Project>
-      <Name>Hierarchy2.Editor</Name>
+    <ProjectReference Include="Hierarchy4.Runtime.csproj">
+      <Project>{6cb26540-eab7-4db6-d7ac-ebcf89231dd2}</Project>
+      <Name>Hierarchy4.Runtime</Name>
     </ProjectReference>
-    <ProjectReference Include="Hierarchy2.Runtime.csproj">
-      <Project>{90738540-afbd-6f7d-4344-15496149a504}</Project>
-      <Name>Hierarchy2.Runtime</Name>
+    <ProjectReference Include="Hierarchy4.Editor.csproj">
+      <Project>{90687258-6ad7-6fd4-8590-b1163b45dc06}</Project>
+      <Name>Hierarchy4.Editor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

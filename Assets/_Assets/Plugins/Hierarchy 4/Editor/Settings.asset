@@ -51,7 +51,7 @@ MonoBehaviour:
   activeHierarchy: 1
   displayCustomObjectIcon: 1
   displayTreeView: 1
-  displayRowBackground: 1
+  displayRowBackground: 0
   displayGrid: 1
   displayStaticButton: 1
   offSetIconAfterName: 8
@@ -61,6 +61,8 @@ MonoBehaviour:
   components:
   - Transform
   - RectTransform
+  - CanvasRenderer
+  - ParticleSystemRenderer
   componentLimited: 0
   componentSize: 16
   componentSpacing: 2

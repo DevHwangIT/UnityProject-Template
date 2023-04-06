@@ -8,7 +8,7 @@ using UnityEditor.UIElements;
 
 #endif
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
 #if UNITY_EDITOR
     public class Foldout : VisualElement
@@ -144,7 +144,6 @@ namespace Hierarchy2
             Add(iMGUIContainer);
         }
     }
-
 #endif
 
     public class HorizontalLayout : VisualElement

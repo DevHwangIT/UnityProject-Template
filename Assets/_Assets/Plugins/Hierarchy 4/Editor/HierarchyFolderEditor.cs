@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 using UnityEditor;
 using UnityEditor.UIElements;
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
     [CustomEditor(typeof(HierarchyFolder))]
     internal class HierarchyFolderEditor : Editor
@@ -35,7 +35,8 @@ namespace Hierarchy2
             return root;
         }
 
-        [MenuItem("Tools/Hierarchy 2/Hierarchy Folder", priority = 0)]
+        [MenuItem("Tools/Hierarchy 4/Hierarchy Folder", priority = 0)]
+        [MenuItem("GameObject/Hierarchy Folder", priority = 0)]
         static void CreateInstance(UnityEditor.MenuCommand command)
         {
             GameObject gameObject = new GameObject("Folder", new Type[1] {typeof(HierarchyFolder)});

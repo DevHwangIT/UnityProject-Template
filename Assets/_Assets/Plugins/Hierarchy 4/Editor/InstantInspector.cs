@@ -2,9 +2,9 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor;
-using Foldout = Hierarchy2.Foldout;
+using Foldout = TNTD.Hierarchy4.Foldout;
 
-namespace Hierarchy2
+namespace TNTD.Hierarchy4
 {
     public class InstantInspector : EditorWindow
     {
@@ -87,7 +87,7 @@ namespace Hierarchy2
                     {
                         Rect rect = new Rect(folout.headerElement.layout);
                         rect.position = evt.mousePosition;
-                        HierarchyEditor.DisplayObjectContextMenu(rect, component, 0);
+                        HierarchyEditor.DisplayObjectContextMenuDelegate(rect, component, 0);
                         evt.StopPropagation();
                     }
                 });
