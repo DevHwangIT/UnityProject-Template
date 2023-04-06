@@ -2,7 +2,7 @@
 
 ---
 <h3>[ 유니티 버전 : 2022.1.9f1 ]</h3>
-<img src="https://user-images.githubusercontent.com/62154896/172307956-98de23b3-8df5-4148-9fff-534c36111f4c.PNG"/>[ Image Size : 3000*1500 ]<br><br>
+<img src="https://user-images.githubusercontent.com/62154896/230340218-8135a277-7946-4757-9d0a-46f12ca4aa8b.png"/>[ Image Size : 3000*1500 ]<br><br>
 
 
 <h3>[ 프로젝트 내용 ]</h3>
