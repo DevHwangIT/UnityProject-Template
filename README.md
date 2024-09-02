@@ -1,8 +1,10 @@
+
 <h2>Unity Project : [ 프로젝트 이름 ]</h2>
 
 ---
-<h3>[ 유니티 버전 : 2022.1.9f1 ]</h3>
-<img src="https://user-images.githubusercontent.com/62154896/230340218-8135a277-7946-4757-9d0a-46f12ca4aa8b.png"/>[ Image Size : 3000*1500 ]<br><br>
+<h3>[ 유니티 버전 : 6000.0.13f1 ]</h3>
+<img  src="https://previews.dropbox.com/p/thumb/ACUAapQLsiMufEmBBEpCC7jVEdEG7kFi8W4SjCIWWQHkgLmXhXOgu1ZkIkNkgv90IsL0spLBcFdIC9hXa-byeumqgbQWKayE0_dMoHsI0FPYpe2uvw9QDg_BUA0lLAV8gLzpNtXL3cD6TfANzP8XG99x7Udbb4rMNUqPn7hiDNRnGEeyIa_lTnZJuEDLhLU1xhklPg5B4xRVt9h_2s_pzy2EKdtKonJCT0PKRexF3M2_zXBqYeYn1HztgxHCkOf-pAVubLzfWfachzntjISmxZgSUPOCmz77DEJnUypGCLRXy3d04zG_aYLkAFN6el4QISuQTRCHFNAwCHZYo0zGj4nC/p.png" width="960" height="540"/>
+<img src=""/>[ Image Size : 1920*1080 ]<br><br>
 
 
 <h3>[ 프로젝트 내용 ]</h3>
@@ -56,4 +58,11 @@ public void Print()
 <h4> 참고 자료 </h4>
 
 예제 - 깃허브 링크<br>
-[![Video Label](http://img.youtube.com/vi/uLR1RNqJ1Mw/0.jpg)](https://youtu.be/uLR1RNqJ1Mw?t=0s)
+
+[![Video Label](https://i.ytimg.com/vi/XUuSxAC5tx8/hqdefault.jpg)](https://www.youtube.com/watch?v=XUuSxAC5tx8)
+
+
+* 처음 템플릿 clone 시 주의사항
+* git bash에서 git submodule init 하기
+
+
