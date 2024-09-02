@@ -1,6 +1,3 @@
-[submodule "Assets/MyLibrary"]
-	path = Assets/MyLibrary
-	url = https://github.com/DevHwangIT/MyLibrary.git
-[submodule "Assets/_Assets/MyLibrary-Unity-"]
-	path = Assets/_Assets/MyLibrary-Unity-
+[submodule "Template Project/Assets/_Assets/MyLibrary-Unity-"]
+	path = Template Project/Assets/_Assets/MyLibrary-Unity-
 	url = https://github.com/DevHwangIT/MyLibrary-Unity-.git
