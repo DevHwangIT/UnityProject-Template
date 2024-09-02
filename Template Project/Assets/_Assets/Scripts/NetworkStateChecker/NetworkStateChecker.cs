@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using MyLibrary.DesignPattern;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Networking;
